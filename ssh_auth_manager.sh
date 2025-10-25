@@ -29,7 +29,7 @@ create_ssh_key() {
     echo
     
     # Ask for username
-    read -p "Enter the username to create the key for: " username
+    read -rp "Enter the username to create the key for: " username
     
     # Verify user exists
     if ! id "$username" &>/dev/null; then
@@ -38,16 +38,16 @@ create_ssh_key() {
     fi
     
     # Get user's home directory
-    user_home=$(eval echo ~$username)
+    user_home=$(eval echo ~"$username")
     
     # Ask for key name
-    read -p "Enter a name for the key (default: id_rsa): " key_name
+    read -rp "Enter a name for the key (default: id_rsa): " key_name
     key_name=${key_name:-id_rsa}
     
     # Check if key already exists
     if [ -f "$user_home/.ssh/$key_name" ]; then
         echo -e "${YELLOW}Warning: A key with name '$key_name' already exists.${NC}"
-        read -p "Do you want to overwrite it? (y/n): " overwrite
+        read -rp "Do you want to overwrite it? (y/n): " overwrite
         if [[ ! $overwrite =~ ^[Yy]$ ]]; then
             echo -e "${YELLOW}Key creation aborted.${NC}"
             return 1
@@ -58,14 +58,12 @@ create_ssh_key() {
     if [ ! -d "$user_home/.ssh" ]; then
         mkdir -p "$user_home/.ssh"
         chmod 700 "$user_home/.ssh"
-        chown $username:$username "$user_home/.ssh"
+        chown "$username":"$username" "$user_home/.ssh"
     fi
     
     # Generate the key
     echo -e "${GREEN}Generating SSH key pair...${NC}"
-    sudo -u $username ssh-keygen -t rsa -b 4096 -f "$user_home/.ssh/$key_name" -N ""
-    
-    if [ $? -eq 0 ]; then
+    if sudo -u "$username" ssh-keygen -t rsa -b 4096 -f "$user_home/.ssh/$key_name" -N ""; then
         echo -e "${GREEN}SSH key pair created successfully!${NC}"
         echo -e "Private key: ${YELLOW}$user_home/.ssh/$key_name${NC}"
         echo -e "Public key: ${YELLOW}$user_home/.ssh/$key_name.pub${NC}"
@@ -73,27 +71,27 @@ create_ssh_key() {
         # Set correct permissions
         chmod 600 "$user_home/.ssh/$key_name"
         chmod 644 "$user_home/.ssh/$key_name.pub"
-        chown $username:$username "$user_home/.ssh/$key_name"
-        chown $username:$username "$user_home/.ssh/$key_name.pub"
+        chown "$username":"$username" "$user_home/.ssh/$key_name"
+        chown "$username":"$username" "$user_home/.ssh/$key_name.pub"
         
         # Add to authorized_keys if not already there
         authorized_keys_file="$user_home/.ssh/authorized_keys"
         if [ ! -f "$authorized_keys_file" ]; then
             touch "$authorized_keys_file"
             chmod 600 "$authorized_keys_file"
-            chown $username:$username "$authorized_keys_file"
+            chown "$username":"$username" "$authorized_keys_file"
         fi
         
         cat "$user_home/.ssh/$key_name.pub" >> "$authorized_keys_file"
         echo -e "${GREEN}Public key added to authorized_keys.${NC}"
         
         # Ask if user wants to export the private key as PEM
-        read -p "Do you want to export the private key as a .pem file? (y/n): " export_pem
+        read -rp "Do you want to export the private key as a .pem file? (y/n): " export_pem
         if [[ $export_pem =~ ^[Yy]$ ]]; then
             pem_file="$user_home/$key_name.pem"
             cp "$user_home/.ssh/$key_name" "$pem_file"
             chmod 600 "$pem_file"
-            chown $username:$username "$pem_file"
+            chown "$username":"$username" "$pem_file"
             echo -e "${GREEN}Private key exported as PEM file: ${YELLOW}$pem_file${NC}"
         fi
     else
@@ -102,7 +100,7 @@ create_ssh_key() {
     fi
     
     echo
-    read -p "Press Enter to continue..."
+    read -rp "Press Enter to continue..."
     return 0
 }
 
@@ -161,7 +159,7 @@ force_key_auth() {
         /etc/init.d/ssh restart
     fi
     
-    if [ $? -eq 0 ]; then
+    if systemctl restart sshd; then
         echo -e "${GREEN}SSH service restarted successfully!${NC}"
         echo -e "${YELLOW}IMPORTANT: Keep your SSH session open and test key-based login in a new session before closing this one.${NC}"
     else
@@ -170,7 +168,7 @@ force_key_auth() {
     fi
     
     echo
-    read -p "Press Enter to continue..."
+    read -rp "Press Enter to continue..."
     return 0
 }
 
@@ -181,15 +179,15 @@ test_ssh_connection() {
     echo
     
     # Ask for server details
-    read -p "Enter the server IP address or hostname: " server
-    read -p "Enter the username: " username
-    read -p "Enter the path to the PEM key file: " pem_file
+    read -rp "Enter the server IP address or hostname: " server
+    read -rp "Enter the username: " username
+    read -rp "Enter the path to the PEM key file: " pem_file
     
     # Validate inputs
     if [ -z "$server" ] || [ -z "$username" ] || [ -z "$pem_file" ]; then
         echo -e "${RED}Error: All fields are required.${NC}"
         echo
-        read -p "Press Enter to continue..."
+        read -rp "Press Enter to continue..."
         return 1
     fi
     
@@ -197,7 +195,7 @@ test_ssh_connection() {
     if [ ! -f "$pem_file" ]; then
         echo -e "${RED}Error: PEM file '$pem_file' does not exist.${NC}"
         echo
-        read -p "Press Enter to continue..."
+        read -rp "Press Enter to continue..."
         return 1
     fi
     
@@ -206,11 +204,11 @@ test_ssh_connection() {
     if [ "$pem_perms" != "600" ] && [ "$pem_perms" != "400" ]; then
         echo -e "${YELLOW}Warning: PEM file permissions are not secure (current: $pem_perms).${NC}"
         echo -e "${YELLOW}Recommended permissions: 600 or 400${NC}"
-        read -p "Do you want to continue anyway? (y/n): " continue_anyway
+        read -rp "Do you want to continue anyway? (y/n): " continue_anyway
         if [[ ! $continue_anyway =~ ^[Yy]$ ]]; then
             echo -e "${YELLOW}Test aborted.${NC}"
             echo
-            read -p "Press Enter to continue..."
+            read -rp "Press Enter to continue..."
             return 1
         fi
     fi
@@ -221,9 +219,7 @@ test_ssh_connection() {
     echo
     
     # Perform the test
-    ssh -i "$pem_file" -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no "$username@$server" 'echo "SSH connection successful!"' 2>&1
-    
-    if [ $? -eq 0 ]; then
+    if ssh -i "$pem_file" -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no "$username@$server" 'echo "SSH connection successful!"' 2>&1; then
         echo
         echo -e "${GREEN}✓ SSH connection test PASSED!${NC}"
         echo -e "${GREEN}The PEM key is working correctly.${NC}"
@@ -240,7 +236,7 @@ test_ssh_connection() {
     fi
     
     echo
-    read -p "Press Enter to continue..."
+    read -rp "Press Enter to continue..."
     return 0
 }
 
@@ -299,7 +295,7 @@ allow_password_auth() {
         /etc/init.d/ssh restart
     fi
     
-    if [ $? -eq 0 ]; then
+    if systemctl restart sshd; then
         echo -e "${GREEN}SSH service restarted successfully!${NC}"
         echo -e "${YELLOW}Password authentication is now enabled.${NC}"
     else
@@ -308,7 +304,7 @@ allow_password_auth() {
     fi
     
     echo
-    read -p "Press Enter to continue..."
+    read -rp "Press Enter to continue..."
     return 0
 }
 
@@ -327,7 +323,7 @@ show_menu() {
     echo
     echo -e "${BLUE}=====================================${NC}"
     echo
-    read -p "Enter your choice [1-5]: " choice
+    read -rp "Enter your choice [1-5]: " choice
     
     case $choice in
         1) create_ssh_key ;;

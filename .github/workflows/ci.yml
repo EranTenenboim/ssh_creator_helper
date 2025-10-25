@@ -7,6 +7,11 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,11 +26,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     
     - name: Verify Python version
       run: |
         python --version
         echo "Python version: ${{ matrix.python-version }}"
+        echo "Matrix version: ${{ matrix.python-version }}"
     
     - name: Cache pip dependencies
       uses: actions/cache@v4
@@ -64,9 +71,11 @@ jobs:
       run: |
         pip install bandit
         # Create the report file first
-        touch bandit-report.json
+        echo '{"results": []}' > bandit-report.json
         # Run bandit scan
         bandit -r . -f json -o bandit-report.json || echo '{"results": []}' > bandit-report.json
+        # Verify file exists
+        ls -la bandit-report.json
     
     - name: Upload security scan results
       uses: actions/upload-artifact@v4

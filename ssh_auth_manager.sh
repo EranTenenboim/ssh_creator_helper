@@ -182,10 +182,20 @@ test_ssh_connection() {
     read -rp "Enter the server IP address or hostname: " server
     read -rp "Enter the username: " username
     read -rp "Enter the path to the PEM key file: " pem_file
+    read -rp "Enter the SSH port (default: 22): " ssh_port
+    ssh_port=${ssh_port:-22}
     
     # Validate inputs
     if [ -z "$server" ] || [ -z "$username" ] || [ -z "$pem_file" ]; then
         echo -e "${RED}Error: All fields are required.${NC}"
+        echo
+        read -rp "Press Enter to continue..."
+        return 1
+    fi
+    
+    # Validate SSH port
+    if ! [[ "$ssh_port" =~ ^[0-9]+$ ]] || [ "$ssh_port" -lt 1 ] || [ "$ssh_port" -gt 65535 ]; then
+        echo -e "${RED}Error: SSH port must be a number between 1 and 65535.${NC}"
         echo
         read -rp "Press Enter to continue..."
         return 1
@@ -215,11 +225,11 @@ test_ssh_connection() {
     
     # Test SSH connection
     echo -e "${GREEN}Testing SSH connection...${NC}"
-    echo -e "${YELLOW}Command: ssh -i \"$pem_file\" -o ConnectTimeout=10 -o BatchMode=yes $username@$server 'echo \"SSH connection successful!\"'${NC}"
+    echo -e "${YELLOW}Command: ssh -i \"$pem_file\" -p $ssh_port -o ConnectTimeout=10 -o BatchMode=yes $username@$server 'echo \"SSH connection successful!\"'${NC}"
     echo
     
     # Perform the test
-    if ssh -i "$pem_file" -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no "$username@$server" 'echo "SSH connection successful!"' 2>&1; then
+    if ssh -i "$pem_file" -p "$ssh_port" -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no "$username@$server" 'echo "SSH connection successful!"' 2>&1; then
         echo
         echo -e "${GREEN}✓ SSH connection test PASSED!${NC}"
         echo -e "${GREEN}The PEM key is working correctly.${NC}"

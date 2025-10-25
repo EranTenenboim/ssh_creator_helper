@@ -81,13 +81,16 @@ The SSH test feature allows you to verify that your PEM key is working correctly
 - Enter the server IP address or hostname
 - Provide the username for the connection
 - Specify the path to your PEM key file
+- **NEW**: Enter the SSH port (default: 22) for non-standard SSH configurations
 - The script will test the connection and provide detailed feedback
 
 **Test Features:**
 - Validates PEM file existence and permissions
+- Supports custom SSH ports (1-65535)
 - Performs a non-interactive SSH connection test
 - Provides clear success/failure feedback
 - Suggests troubleshooting steps for failed connections
+- Port validation ensures only valid port numbers are accepted
 
 ## Safety Features
 

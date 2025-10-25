@@ -1,0 +1,153 @@
+# SSH Creator Helper
+
+A comprehensive SSH authentication management tool for Linux servers. This script provides an easy-to-use menu for creating SSH keys, configuring authentication methods, and testing connections.
+
+## Features
+
+- **Create SSH Key Pair**: Generate a secure RSA key pair for SSH authentication
+- **Force Key Authentication**: Configure SSH to only accept key-based authentication (disable passwords)
+- **Revert to Password Authentication**: Re-enable password authentication for SSH
+- **Test SSH Connection**: Test SSH connectivity using a PEM key from the client
+
+## Requirements
+
+- Linux server (Ubuntu, Debian, CentOS, etc.)
+- Root/sudo privileges
+- OpenSSH server installed and running
+
+## Installation
+
+### From GitHub Repository
+
+1. Clone the repository:
+
+```bash
+git clone git@github.com:EranTenenboim/ssh_creator_helper.git
+cd ssh_creator_helper
+```
+
+2. Make the script executable:
+
+```bash
+chmod +x ssh_auth_manager.sh
+```
+
+### Direct Download
+
+```bash
+curl -O https://raw.githubusercontent.com/EranTenenboim/ssh_creator_helper/main/ssh_auth_manager.sh
+chmod +x ssh_auth_manager.sh
+```
+
+## Usage
+
+Run the script with sudo privileges:
+
+```bash
+sudo ./ssh_auth_manager.sh
+```
+
+### Creating SSH Keys
+
+When creating SSH keys:
+- You'll be asked for the username to create the key for
+- You can specify a custom name for the key (default: id_rsa)
+- The script will automatically add the public key to authorized_keys
+- You can choose to export the private key as a .pem file
+
+### Forcing Key Authentication
+
+**IMPORTANT**: Before forcing key-based authentication:
+- Make sure you have a working SSH key pair
+- Test key-based login in a new SSH session before closing your current one
+- Keep a backup of your SSH configuration
+
+The script will:
+- Back up your SSH configuration
+- Disable password authentication
+- Enable public key authentication
+- Restart the SSH service
+
+### Reverting to Password Authentication
+
+If you need to re-enable password authentication:
+- The script will back up your SSH configuration
+- Enable password authentication while keeping key authentication enabled
+- Restart the SSH service
+
+### Testing SSH Connection
+
+The SSH test feature allows you to verify that your PEM key is working correctly:
+- Enter the server IP address or hostname
+- Provide the username for the connection
+- Specify the path to your PEM key file
+- The script will test the connection and provide detailed feedback
+
+**Test Features:**
+- Validates PEM file existence and permissions
+- Performs a non-interactive SSH connection test
+- Provides clear success/failure feedback
+- Suggests troubleshooting steps for failed connections
+
+## Safety Features
+
+- Configuration backups are created automatically
+- The script verifies user existence before creating keys
+- Proper permissions are set on all SSH files
+- Warning messages for critical operations
+
+## Troubleshooting
+
+If you encounter issues after changing SSH settings, you can restore from the backup:
+
+```bash
+sudo cp /etc/ssh/sshd_config.backup.[timestamp] /etc/ssh/sshd_config
+sudo systemctl restart sshd
+```
+
+## Testing
+
+This project includes a comprehensive test suite to ensure reliability and functionality.
+
+### Running Tests
+
+```bash
+# Install test dependencies
+pip install -r requirements-test.txt
+
+# Run the test suite
+python -m pytest tests/ -v
+
+# Run with coverage
+python -m pytest tests/ --cov=ssh_auth_manager --cov-report=html
+```
+
+### Test Coverage
+
+The test suite includes:
+- Unit tests for all functions
+- Mock SSH operations for safe testing
+- Integration tests for complete workflows
+- Security validation tests
+
+## Development
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+### Code Quality
+
+- All code follows Google standards
+- Comprehensive test coverage required
+- CI/CD pipeline validates all changes
+- Security best practices enforced
+
+## License
+
+This script is provided "as is", without warranty of any kind.

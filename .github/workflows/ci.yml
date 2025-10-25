@@ -52,15 +52,12 @@ jobs:
     
     - name: Test with pytest
       run: |
-        python -m pytest tests/ -v --cov=ssh_auth_manager --cov-report=xml --cov-report=html
+        python -m pytest tests/ -v
     
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
+    - name: Test coverage note
+      run: |
+        echo "Coverage testing not applicable for shell script testing"
+        echo "Shell script functionality is tested through subprocess execution"
     
     - name: Security scan with bandit
       run: |

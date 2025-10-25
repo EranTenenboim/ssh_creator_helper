@@ -179,10 +179,14 @@ test_ssh_connection() {
     echo
     
     # Ask for server details
-    read -rp "Enter the server IP address or hostname: " server
-    read -rp "Enter the username: " username
-    read -rp "Enter the path to the PEM key file: " pem_file
-    read -rp "Enter the SSH port (default: 22): " ssh_port
+    echo -n "Enter the server IP address or hostname: "
+    read -r server
+    echo -n "Enter the username: "
+    read -r username
+    echo -n "Enter the path to the PEM key file: "
+    read -r pem_file
+    echo -n "Enter the SSH port (default: 22): "
+    read -r ssh_port
     ssh_port=${ssh_port:-22}
     
     # Validate inputs

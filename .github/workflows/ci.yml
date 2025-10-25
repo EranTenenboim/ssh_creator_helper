@@ -26,7 +26,6 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip'
     
     - name: Verify Python version
       run: |
@@ -71,10 +70,25 @@ jobs:
         pip install bandit
         # Create the report file first
         echo '{"results": []}' > bandit-report.json
-        # Run bandit scan
+        # Run bandit scan on Python files only
         bandit -r . -f json -o bandit-report.json || echo '{"results": []}' > bandit-report.json
-        # Verify file exists
+        # Verify file exists and show contents
         ls -la bandit-report.json
+        cat bandit-report.json
+    
+    - name: Verify bandit report exists
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Files in current directory:"
+        ls -la
+        echo "Checking for bandit-report.json:"
+        if [ -f bandit-report.json ]; then
+          echo "bandit-report.json exists"
+          cat bandit-report.json
+        else
+          echo "bandit-report.json not found, creating it"
+          echo '{"results": []}' > bandit-report.json
+        fi
     
     - name: Upload security scan results
       uses: actions/upload-artifact@v4

@@ -197,6 +197,29 @@ test_ssh_connection() {
         return 1
     fi
     
+    # Check if trying to connect to the same server
+    current_hostname=$(hostname)
+    current_ip=$(hostname -I | awk '{print $1}')
+    
+    if [ "$server" = "$current_hostname" ] || [ "$server" = "$current_ip" ] || [ "$server" = "localhost" ] || [ "$server" = "127.0.0.1" ]; then
+        echo -e "${YELLOW}Warning: You are trying to test SSH connection to the same server you're running this script on.${NC}"
+        echo -e "${YELLOW}This may cause 'Connection refused' errors due to SSH self-connection limitations.${NC}"
+        echo
+        echo -e "${BLUE}Recommendations:${NC}"
+        echo "1. Test from a different machine to this server"
+        echo "2. Use the PEM key to connect from another client"
+        echo "3. Check if SSH service is running: systemctl status ssh"
+        echo "4. Verify SSH configuration: ssh -T git@github.com"
+        echo
+        read -rp "Do you want to continue anyway? (y/n): " continue_anyway
+        if [[ ! $continue_anyway =~ ^[Yy]$ ]]; then
+            echo -e "${YELLOW}Test cancelled.${NC}"
+            echo
+            read -rp "Press Enter to continue..."
+            return 1
+        fi
+    fi
+    
     # Validate SSH port
     if ! [[ "$ssh_port" =~ ^[0-9]+$ ]] || [ "$ssh_port" -lt 1 ] || [ "$ssh_port" -gt 65535 ]; then
         echo -e "${RED}Error: SSH port must be a number between 1 and 65535.${NC}"
@@ -247,6 +270,14 @@ test_ssh_connection() {
         echo "  - SSH service is not running on the server"
         echo "  - Firewall is blocking the connection"
         echo "  - Public key is not in the server's authorized_keys"
+        echo "  - Testing from same server (self-connection issues)"
+        echo "  - Wrong SSH port specified"
+        echo
+        echo -e "${BLUE}Troubleshooting tips:${NC}"
+        echo "  - Test from a different machine to this server"
+        echo "  - Check SSH service: systemctl status ssh"
+        echo "  - Verify SSH config: cat /etc/ssh/sshd_config"
+        echo "  - Test basic connectivity: telnet $server $ssh_port"
     fi
     
     echo

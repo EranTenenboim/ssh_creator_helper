@@ -188,8 +188,8 @@ jobs:
     
     - name: Create release archive
       run: |
-        tar -czf ssh_creator_helper.tar.gz ssh_auth_manager.sh README.md
-        zip -r ssh_creator_helper.zip ssh_auth_manager.sh README.md
+        tar -czf ssh_creator_helper.tar.gz ssh_auth_manager.sh README
+        zip -r ssh_creator_helper.zip ssh_auth_manager.sh README
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
